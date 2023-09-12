@@ -20,5 +20,10 @@ Introduction - the project's aim
 <!-- Technologies -->
 ## Technologies
 
+* DB: MongoDB
+* Backend: Python
+* Frontend: HTML & CSS
+* Flask App
+
 <!-- Launch-->
 ## Launch
