@@ -7,5 +7,36 @@
     <title>What's for mealtime?</title>
 </head>
 <body>
+    <h1>{% if generated_mealtime %} {{ generated_mealtime }}{% endif %}</h1>
+    <h2>Select date, type and the amount of food: </h2>
+
+    <form method="POST" onsubmit="return confirm('Are you sure you want to submit this?');" >
+        <div class="container">
+        <div class="invisible-table">
+    <div class="table-row">
+        <div class="table-cell"><div class="inner-row-right"><label for="date">Date:</label></div></div>
+        <div class="table-cell"><div class="inner-row-left"><input type="date" id="date" name="date" required><br><br></div></div>
+    </div>
+    <div class="table-row">
+        <div class="table-cell"><div class="inner-row-right"><label for="time">Time:</label></div></div>
+        <div class="table-cell"><div class="inner-row-left"><input type="time" id="time" name="time" required><br><br></div></div>
+    </div>
+            <div class="table-row">
+        <div class="table-cell"><div class="inner-row-right"><label for="dropdown">Food:</label></div></div>
+        <div class="table-cell"><div class="inner-row-left"><select name="dropdown" id="dropdown">
+           {% for option in options %}
+           <option value="{{ option }}" {% if selected_option == option %}selected{% endif %}>{{ option }}</option>
+           {% endfor %}
+       </select></div></div>
+    </div>
+        <div class="table-row">
+        <div class="table-cell"><div class="inner-row-right"><label for="number">Amt:</label></div></div>
+        <div class="table-cell"><div class="inner-row-left"><input type="number" id="amount" name="amount" min="1" required><br><br></div></div>
+    </div>
+
+    </div>
+        </div>
+        <p><input class="submit-button" type="submit"  value="Submit"></p>
+    </form>
 </body>
 </html>
