@@ -14,6 +14,8 @@ Introduction - the project's aim
 <!-- About the Project --> 
 ## About the Project
 
+What's for mealtime app helps in logging the daily meals of a bearded dragon. 
+
 <!-- Getting Started -->
 ## Getting Started
 
@@ -27,3 +29,7 @@ Introduction - the project's aim
 
 <!-- Launch-->
 ## Launch
+
+```
+pip install -r requirements.txt
+```
