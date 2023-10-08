@@ -17,18 +17,27 @@ What's for mealtime app helps in logging the daily meals of a bearded dragon.
 
 <!-- Getting Started -->
 ## Getting Started
+### Pre-Requisites
+
+* Locally: Setup mongodb docker instance
+* Production: Setup mongodb
 
 <!-- Technologies -->
 ## Technologies
 
+* Flask App
 * DB: MongoDB
 * Backend: Python
 * Frontend: HTML & CSS
-* Flask App
 
 <!-- Launch-->
 ## Launch
 
 ```
 pip install -r requirements.txt
+```
+
+## Run
+```
+python main.py
 ```
