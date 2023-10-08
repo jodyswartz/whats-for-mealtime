@@ -25,7 +25,7 @@ def index():
         password = request.form['password']
         date = request.form['date']
         time = request.form['time']
-        selected_datetime = f"Date: {date}, Time: {time}"
+        selected_datetime = f"Date:  date , Time:  time "
         selected_amount = request.form['amount']
         selected_name = request.form['dropdown']
 

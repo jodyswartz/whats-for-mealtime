@@ -1,6 +1,5 @@
 <!-- Project logo -->
 ![what's for mealtime?](/documentation/assets/whats_for_mealtime.png)
-Introduction - the project's aim
 
 <!-- Shields --> 
 <!-- Table Of Contents -->
