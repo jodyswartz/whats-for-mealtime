@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <link rel="shortcut icon" href="#" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="   url_for('static', filename='styles.css')   ">
     <title>What's for mealtime?</title>
 </head>
 <body>
-    <h1>{% if generated_mealtime %} {{ generated_mealtime }}{% endif %}</h1>
+    <h1> % if generated_mealtime %     generated_mealtime    % endif % </h1>
     <h2>Select date, type and the amount of food: </h2>
 
     <form method="POST" onsubmit="return confirm('Are you sure you want to submit this?');" >
@@ -32,9 +32,9 @@
             <div class="table-row">
         <div class="table-cell"><div class="inner-row-right"><label for="dropdown">Food:</label></div></div>
         <div class="table-cell"><div class="inner-row-left"><select name="dropdown" id="dropdown">
-           {% for option in options %}
-           <option value="{{ option }}" {% if selected_option == option %}selected{% endif %}>{{ option }}</option>
-           {% endfor %}
+            % for option in options % 
+           <option value="   option   "  % if selected_option == option % selected % endif % >   option   </option>
+            % endfor % 
        </select></div></div>
     </div>
         <div class="table-row">
