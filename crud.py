@@ -15,7 +15,6 @@ def insert(username, password, date, time, selected_name, selected_amount):
     db = client['astro_journal']
 
     food_collection = db['food']
-    # Production
     food_collection.insert_one({'date': date,
                                 'time': time,
                                 'name': selected_name,
