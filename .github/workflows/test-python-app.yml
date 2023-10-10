@@ -17,6 +17,9 @@ jobs:
       
     - name : Install flask Packages
       run: pip install flask
+      
+    - name : Install pymongo Packages
+      run: pip install pymongo
    
     - name: Install pytest Package  
       run : pip install pytest
