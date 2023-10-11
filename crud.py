@@ -5,7 +5,7 @@ def insert(username, password, date, time, selected_name, selected_amount):
     # local
     #url = 'mongodb://{}:{}@localhost:27017'.format(username, password)
     # production
-    url = f"mongodb+srv:// username : password @cluster0.m4cipub.mongodb.net/?tls=true&tlsAllowInvalidCertificates=true"
+    url = f"mongodb+srv://{username}:{password}@cluster0.m4cipub.mongodb.net/?tls=true&tlsAllowInvalidCertificates=true"
     client = pymongo.MongoClient(url)
     try:
         client.admin.command('ping')
