@@ -6,15 +6,20 @@ import utils
 app = Flask(__name__, static_folder='static')
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
+    options = utils.getFoodList()
+    return render_template('index.html', options=options)
+
+
+@app.route('/receipt', methods=['GET', 'POST'])
+def receipt():
     username = None
     password = None
     date = None
     time = None
     selected_datetime = None
     selected_amount = None
-    options = utils.getFoodList()
     selected_name = None
     generated_mealtime = None
 
@@ -33,10 +38,10 @@ def index():
             crud.insert(username=username, password=password, date=date, time=time, selected_name=selected_name,
                         selected_amount=selected_amount)
 
-    return render_template('index.html', generated_mealtime=generated_mealtime, selected_datetime=selected_datetime,
-                           selected_amount=selected_amount, options=options, selected_name=selected_name)
+    return render_template('receipt.html', date=date, time=time,
+                           selected_amount=selected_amount, selected_name=selected_name)
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5001))
+    port = int(os.environ.get('PORT', 5026))
     app.run(debug=True, host='0.0.0.0', port=port)

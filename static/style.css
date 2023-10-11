@@ -1,54 +1,54 @@
-*  
+* {
     text-align: center;
- 
+}
 
-@font-face  
+@font-face {
     font-family: 'Habanero';
-    src: url('/static/Habanero.ttf') format('truetype');
-  
+    src: url('Habanero.ttf') format('truetype');
+}
 
-h1, h2  
+h1, h2 {
     color: #FAF9F6;
     font-family: 'Habanero';
- 
+}
 
-body  
+body {
     background-color: #E5CDAF;
- 
 
-.container  
+}
+.container {
     display: flex;
     justify-content: center;
- 
+}
 
-.invisible-table  
+.invisible-table  {
     display: table;
-    border-collapse: collapse; 
- 
+    border-collapse: collapse;
+}
 
-.table-row  
+.table-row {
     display: table-row;
- 
+}
 
-.table-cell  
+.table-cell  {
     display: table-cell;
     border: none;
-    padding: 5px; 
- 
+    padding: 5px;
+}
 
-.inner-row-left  
+.inner-row-left  {
     text-align: left;
- 
+}
 
-.inner-row-right  
+.inner-row-right  {
     text-align: right;
- 
+}
 
- .submit-button  
+ .submit-button {
     background-color: #BFCAD6;
-    width: 100px; 
-    height: 50px; 
-    font-size: 20px; 
+    width: 100px;
+    height: 50px;
+    font-size: 20px;
     font-family: 'Habanero';
     color: #FAF9F6;
- 
+ }
