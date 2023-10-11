@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="#" />
+    <link rel="stylesheet" type=text/css href="{{ url_for('static',filename='style.css') }}">
+    <title>What's for mealtime?</title>
+</head>
+<body>
+    <h1>Receipt:</h1>
+    <ul>
+        <p><h2>Date: {{date}}</h2></p>
+        <p><h2>Time: {{time}}</h2></p>
+        <p><h2>Name: {{selected_name}}</h2></p>
+        <p><h2>Amount: {{selected_amount}}</h2></p>
+    </ul>
+<a href="/"><button>Back</button></a>
+</body>
+</html>
