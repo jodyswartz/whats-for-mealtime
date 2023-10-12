@@ -8,8 +8,11 @@ app = Flask(__name__, static_folder='static')
 
 @app.route('/')
 def index():
+    generated_mealtime = None
+
+    generated_mealtime = utils.mealtime()
     options = utils.getFoodList()
-    return render_template('index.html', options=options)
+    return render_template('index.html', generated_mealtime=generated_mealtime, options=options)
 
 
 @app.route('/receipt', methods=['GET', 'POST'])
@@ -21,9 +24,6 @@ def receipt():
     selected_datetime = None
     selected_amount = None
     selected_name = None
-    generated_mealtime = None
-
-    generated_mealtime = utils.mealtime()
 
     if request.method == 'POST':
         username = request.form['username']
