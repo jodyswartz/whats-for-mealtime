@@ -5,6 +5,7 @@ from functools import wraps
 
 import pyotp
 import qrcode
+from qrcode.constants import ERROR_CORRECT_M
 from flask import Flask, redirect, render_template, request, session, send_file, url_for
 
 from crud import insert_feeding, list_feedings, ping_db
@@ -44,7 +45,17 @@ def login_required(fn):
 def login():
     # Add ?setup=1 the first time so you can scan the QR code.
     show_qr = request.args.get("setup") == "1"
-    return render_template("login.html", error=None, show_qr=show_qr)
+    issuer = os.getenv("TOTP_ISSUER", "AstroJournal")
+    account = os.getenv("TOTP_ACCOUNT", "me")
+    secret = os.getenv("TOTP_SECRET", "")
+    return render_template(
+        "login.html",
+        error=None,
+        show_qr=show_qr,
+        issuer=issuer,
+        account=account,
+        secret=secret,
+    )
 
 
 @app.post("/login")
@@ -72,7 +83,17 @@ def totp_qr():
     account = os.getenv("TOTP_ACCOUNT", "me")
     uri = _totp().provisioning_uri(name=account, issuer_name=issuer)
 
-    img = qrcode.make(uri)
+    # Generate a high-contrast, large, easy-to-scan QR code
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=ERROR_CORRECT_M,
+        box_size=10,   # bigger modules
+        border=4,
+    )
+    qr.add_data(uri)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)
