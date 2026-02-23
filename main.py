@@ -1,47 +1,200 @@
-from flask import Flask, render_template, request
+import io
 import os
-import crud
-import utils
+from datetime import datetime
+from functools import wraps
 
-app = Flask(__name__, static_folder='static')
+import pyotp
+import qrcode
+from flask import Flask, redirect, render_template, request, session, send_file, url_for
+
+from crud import insert_feeding, list_feedings, ping_db
+from utils import load_food_list
+
+app = Flask(__name__)
+
+# Used to sign the session cookie (required for login sessions)
+app.secret_key = os.getenv("APP_SECRET_KEY", "dev-secret-change-me")
+
+FOOD_LIST_PATH = os.getenv("FOOD_LIST_PATH", "foodlist.txt")
 
 
-@app.route('/')
+def _now_defaults():
+    now = datetime.now()
+    return now.strftime("%Y-%m-%d"), now.strftime("%H:%M")
+
+
+def _totp() -> pyotp.TOTP:
+    secret = os.getenv("TOTP_SECRET", "").strip()
+    if not secret:
+        raise RuntimeError("TOTP_SECRET is not set")
+    return pyotp.TOTP(secret)
+
+
+def login_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not session.get("authed"):
+            return redirect(url_for("login"))
+        return fn(*args, **kwargs)
+
+    return wrapper
+
+
+@app.get("/login")
+def login():
+    # Add ?setup=1 the first time so you can scan the QR code.
+    show_qr = request.args.get("setup") == "1"
+    return render_template("login.html", error=None, show_qr=show_qr)
+
+
+@app.post("/login")
+def login_post():
+    code = (request.form.get("code") or "").strip().replace(" ", "")
+    try:
+        # valid_window=1 allows a little clock drift (30s)
+        if _totp().verify(code, valid_window=1):
+            session["authed"] = True
+            return redirect(url_for("index"))
+    except Exception:
+        pass
+    return render_template("login.html", error="Invalid code.", show_qr=False), 401
+
+
+@app.get("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@app.get("/totp-qr")
+def totp_qr():
+    issuer = os.getenv("TOTP_ISSUER", "AstroJournal")
+    account = os.getenv("TOTP_ACCOUNT", "me")
+    uri = _totp().provisioning_uri(name=account, issuer_name=issuer)
+
+    img = qrcode.make(uri)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return send_file(buf, mimetype="image/png")
+
+
+@app.get("/")
+@login_required
 def index():
-    generated_mealtime = None
+    default_date, default_time = _now_defaults()
+    foods = load_food_list(FOOD_LIST_PATH)
 
-    generated_mealtime = utils.mealtime()
-    options = utils.getFoodList()
-    return render_template('index.html', generated_mealtime=generated_mealtime, options=options)
-
-
-@app.route('/receipt', methods=['GET', 'POST'])
-def receipt():
-    username = None
-    password = None
-    date = None
-    time = None
-    selected_datetime = None
-    selected_amount = None
-    selected_name = None
-
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        date = request.form['date']
-        time = request.form['time']
-        selected_datetime = f"Date:  date , Time:  time "
-        selected_amount = request.form['amount']
-        selected_name = request.form['dropdown']
-
-        if date is not None and time is not None and selected_name is not None and selected_amount is not None:
-            crud.insert(username=username, password=password, date=date, time=time, selected_name=selected_name,
-                        selected_amount=selected_amount)
-
-    return render_template('receipt.html', date=date, time=time,
-                           selected_amount=selected_amount, selected_name=selected_name)
+    ok, db_status = ping_db() if os.getenv("MONGODB_URI") else (False, "Not configured (MONGODB_URI not set)")
+    return render_template(
+        "index.html",
+        default_date=default_date,
+        default_time=default_time,
+        db_status=db_status,
+        foods=foods,
+    )
 
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5001))
-    app.run(debug=True, host='0.0.0.0', port=port)
+@app.post("/submit")
+@login_required
+def submit():
+    foods = load_food_list(FOOD_LIST_PATH)
+    allowed_foods = {f.strip().lower() for f in foods if f.strip()}
+    allowed_foods.add("water")  # safety
+
+    date = (request.form.get("date") or "").strip()
+    time = (request.form.get("time") or "").strip()
+    name = (request.form.get("name") or "").strip()
+    amount_raw = (request.form.get("amount") or "").strip()
+
+    errors = []
+
+    # Required
+    if not date:
+        errors.append("Date is required.")
+    if not time:
+        errors.append("Time is required.")
+    if not name:
+        errors.append("Food name is required.")
+    if not amount_raw:
+        errors.append("Amount is required.")
+
+    # Format checks
+    if date:
+        try:
+            datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            errors.append("Date must be in YYYY-MM-DD format.")
+
+    if time:
+        try:
+            datetime.strptime(time, "%H:%M")
+        except ValueError:
+            errors.append("Time must be in HH:MM (24-hour) format.")
+
+    # Name must be in list
+    name_norm = name.strip().lower()
+    if name and name_norm not in allowed_foods:
+        errors.append("Food name must be one of the options in the dropdown.")
+
+    # Amount must be integer
+    amount_int = None
+    if amount_raw:
+        try:
+            amount_int = int(amount_raw)
+        except ValueError:
+            errors.append("Amount must be a whole number.")
+
+    # Range check
+    if amount_int is not None:
+        if amount_int < 1:
+            errors.append("Amount must be at least 1.")
+        if amount_int > 500:
+            errors.append("Amount looks too large (max 500).")
+
+    # Water rule (server enforced)
+    if name_norm == "water":
+        amount_int = 1
+
+    if errors:
+        default_date, default_time = _now_defaults()
+        ok, db_status = ping_db() if os.getenv("MONGODB_URI") else (False, "Not configured (MONGODB_URI not set)")
+        return render_template(
+            "index.html",
+            default_date=default_date,
+            default_time=default_time,
+            db_status=db_status,
+            foods=foods,
+            errors=errors,
+            form={"date": date, "time": time, "name": name, "amount": amount_raw},
+        ), 400
+
+    doc = {
+        "date": date,
+        "time": time,
+        "name": name,
+        "amount": amount_int,  # store as number
+    }
+
+    inserted_id = None
+    if os.getenv("MONGODB_URI"):
+        ok, _ = ping_db()
+        if ok:
+            inserted_id = insert_feeding(doc)
+
+    return redirect(url_for("logs", inserted_id=inserted_id or ""))
+
+
+@app.get("/logs")
+@login_required
+def logs():
+    ok, db_status = ping_db() if os.getenv("MONGODB_URI") else (False, "Not configured (MONGODB_URI not set)")
+    inserted_id = request.args.get("inserted_id") or ""
+    feedings = list_feedings(limit=80) if os.getenv("MONGODB_URI") else []
+    return render_template("receipt.html", feedings=feedings, db_status=db_status, inserted_id=inserted_id)
+
+
+if __name__ == "__main__":
+    debug = os.getenv("FLASK_DEBUG", "0") == "1"
+    port = int(os.getenv("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=debug)

@@ -1,20 +1,93 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="#" />
-    <link rel="stylesheet" type=text/css href="{{ url_for('static',filename='style.css') }}">
-    <title>What's for mealtime?</title>
-</head>
-<body>
-    <h1>Receipt:</h1>
-    <ul>
-        <p><h2>Date: {{date}}</h2></p>
-        <p><h2>Time: {{time}}</h2></p>
-        <p><h2>Name: {{selected_name}}</h2></p>
-        <p><h2>Amount: {{selected_amount}}</h2></p>
-    </ul>
-<a href="/"><button>Back</button></a>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Receipt</title>
+    <style>
+      :root{
+        --bg-uluru: #A6402D;          /* Uluru rock red */
+        --text-offwhite: #F3EFE6;     /* off-white */
+        --muted: rgba(243,239,230,0.82);
+        --border: rgba(243,239,230,0.22);
+        --table-border: rgba(243,239,230,0.16);
+        --row-hover: rgba(255,255,255,0.06);
+        --ok-bg: rgba(0,0,0,0.22);
+        --ok-border: rgba(243,239,230,0.24);
+      }
+
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        margin: 2rem;
+        max-width: 900px;
+        background: var(--bg-uluru);
+        color: var(--text-offwhite);
+      }
+
+      h1 { margin-top: 0; }
+
+      .meta { color: var(--muted); margin-bottom: 1rem; }
+
+      table { width:100%; border-collapse: collapse; }
+      th, td { text-align:left; padding:.6rem .5rem; border-bottom:1px solid var(--table-border); }
+      th { border-bottom:1px solid var(--border); }
+
+      tbody tr:hover { background: var(--row-hover); }
+
+      .ok {
+        background: var(--ok-bg);
+        border: 1px solid var(--ok-border);
+        padding: .6rem .9rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+      }
+
+      a { color: var(--text-offwhite); text-decoration: underline; text-underline-offset: 3px; }
+
+      code {
+        color: var(--text-offwhite);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Receipt</h1>
+    <div class="meta"><strong>DB status:</strong> {{ db_status }}</div>
+
+    {% if inserted_id %}
+      <div class="ok">Saved! Inserted id: <code>{{ inserted_id }}</code></div>
+    {% endif %}
+
+    {% if feedings and feedings|length > 0 %}
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Name</th>
+            <th>Amount</th>
+            <th>ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in feedings %}
+            <tr>
+              <td>{{ f.date }}</td>
+              <td>{{ f.time }}</td>
+              <td>{{ f.name }}</td>
+              <td>{{ f.amount }}</td>
+              <td><code>{{ f._id }}</code></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No entries yet.</p>
+    {% endif %}
+
+    <p style="margin-top:1rem;">
+      <a href="/">← Back to entry</a>
+    </p>
+  </body>
 </html>
