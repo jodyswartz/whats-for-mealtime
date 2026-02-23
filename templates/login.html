@@ -20,5 +20,14 @@
     <p>Scan this once in your authenticator app:</p>
     <img src="{{ url_for('totp_qr') }}" alt="TOTP QR code" />
   {% endif %}
+{% if show_qr %}
+  <p>If scanning fails, add it manually:</p>
+  <ul>
+    <li><strong>Issuer:</strong> {{ issuer }}</li>
+    <li><strong>Account:</strong> {{ account }}</li>
+    <li><strong>Secret:</strong> <code style="user-select:all">{{ secret }}</code></li>
+    <li><strong>Type:</strong> Time-based (TOTP)</li>
+  </ul>
+{% endif %}
 </body>
 </html>
