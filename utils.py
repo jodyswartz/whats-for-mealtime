@@ -1,55 +1,39 @@
-from datetime import datetime
+import os
+import random
+from typing import List
 
 
-def getFoodList():
-    file_path = "foodlist.txt"
+def load_food_list(file_path: str) -> List[str]:
+    """
+    Loads food list from a text file. Supports:
+    - one item per line
+    - or space-separated items on a single line (fallback)
+    """
+    if not file_path:
+        return []
+
+    if not os.path.exists(file_path):
+        # don't crash if missing
+        return []
 
     try:
-        with open(file_path, 'r') as file:
-            file_contents = file.read()
+        with open(file_path, "r", encoding="utf-8") as f:
+            raw = f.read().strip()
 
-            lines = file_contents.splitlines()
+        if not raw:
+            return []
 
-            data_array = []
-            for line in lines:
-                data_array.append(line)
+        lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
+        if len(lines) >= 2:
+            return lines
 
-            return data_array
-
-    except FileNotFoundError:
-        print(f"The file ' file_path ' was not found.")
-    except Exception as e:
-        print(f"An error occurred:  str(e) ")
+        # fallback: single line space-separated
+        return [x.strip() for x in raw.split() if x.strip()]
+    except Exception:
+        return []
 
 
-def mealtime():
-    current_time = datetime.now().time()
-    general_mealtime = "What's for "
-
-    breakfast_start = datetime(1900, 1, 1, 6, 0, 0).time()
-    breakfast_end = datetime(1900, 1, 1, 10, 59, 59).time()
-
-    brunch_start = datetime(1900, 1, 1, 11, 0, 0).time()
-    brunch_end = datetime(1900, 1, 1, 11, 59, 59).time()
-
-    lunch_start = datetime(1900, 1, 1, 12, 0, 0).time()
-    lunch_end = datetime(1900, 1, 1, 14, 0, 0).time()
-
-    dinner_start = datetime(1900, 1, 1, 18, 0, 0).time()
-    dinner_end = datetime(1900, 1, 1, 22, 0, 0).time()
-
-    late_night_start = datetime(1900, 1, 1, 22, 0, 0).time()
-    late_night_end = datetime(1900, 1, 1, 23, 59, 0).time()
-
-    if breakfast_start <= current_time <= breakfast_end:
-        return general_mealtime + " Breakfast?"
-    elif brunch_start <= current_time <= brunch_end:
-        return general_mealtime + " Brunch?"
-    elif lunch_start <= current_time <= lunch_end:
-        return general_mealtime + " Lunch?"
-    elif dinner_start <= current_time <= dinner_end:
-        return general_mealtime + " Dinner?"
-    elif late_night_start <= current_time <= late_night_end:
-        return "Late Night Meal?"
-    else:
-        return "Feeling for a Snack?"
+def pick_random_food(foods: List[str]) -> str:
+    if not foods:
+        return ""
+    return random.choice(foods)
