@@ -10,10 +10,11 @@ from main import app  # noqa: E402
 def test_login_page_loads():
     client = app.test_client()
     resp = client.get("/login")
-    assert resp.status_code in (200, 302)  # 302 if you redirect somewhere
+    assert resp.status_code == 200
 
 
-def test_index_requires_login():
+def test_index_redirects_to_login_when_not_authed():
     client = app.test_client()
-    resp = client.get("/")
-    assert resp.status_code in (200, 302)  # 302 if TOTP is enabled
+    resp = client.get("/", follow_redirects=False)
+    assert resp.status_code == 302
+    assert "/login" in resp.headers.get("Location", "")
