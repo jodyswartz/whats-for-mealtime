@@ -58,18 +58,13 @@ def login():
     )
 
 
-@app.post("/login")
-def login_post():
-    code = (request.form.get("code") or "").strip().replace(" ", "")
-    try:
-        # valid_window=1 allows a little clock drift (30s)
-        if _totp().verify(code, valid_window=1):
-            session["authed"] = True
-            return redirect(url_for("index"))
-    except Exception:
-        pass
-    return render_template("login.html", error="Invalid code.", show_qr=False), 401
-
+@app.get("/login")
+def login():
+    show_qr = request.args.get("setup") == "1"
+    issuer = os.getenv("TOTP_ISSUER", "AstroJournal")
+    account = os.getenv("TOTP_ACCOUNT", "me")
+    secret = os.getenv("TOTP_SECRET", "")
+    return render_template("login.html", error=None, show_qr=show_qr, issuer=issuer, account=account, secret=secret)
 
 @app.get("/logout")
 def logout():
