@@ -35,14 +35,14 @@ def login_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if not session.get("authed"):
-            return redirect(url_for("login"))
+            return redirect(url_for("login_page"))
         return fn(*args, **kwargs)
 
     return wrapper
 
 
 @app.get("/login")
-def login():
+def login_page():
     # Add ?setup=1 the first time so you can scan the QR code.
     show_qr = request.args.get("setup") == "1"
     issuer = os.getenv("TOTP_ISSUER", "AstroJournal")
@@ -58,18 +58,24 @@ def login():
     )
 
 
-@app.get("/login")
-def login():
-    show_qr = request.args.get("setup") == "1"
-    issuer = os.getenv("TOTP_ISSUER", "AstroJournal")
-    account = os.getenv("TOTP_ACCOUNT", "me")
-    secret = os.getenv("TOTP_SECRET", "")
-    return render_template("login.html", error=None, show_qr=show_qr, issuer=issuer, account=account, secret=secret)
+@app.post("/login")
+def login_submit():
+    code = (request.form.get("code") or "").strip().replace(" ", "")
+    try:
+        # valid_window=1 allows a little clock drift (30s)
+        if _totp().verify(code, valid_window=1):
+            session["authed"] = True
+            return redirect(url_for("index"))
+    except Exception:
+        pass
+    # keep issuer/account/secret available if you want to re-show setup manually
+    return render_template("login.html", error="Invalid code.", show_qr=False), 401
+
 
 @app.get("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect(url_for("login_page"))
 
 
 @app.get("/totp-qr")
@@ -82,7 +88,7 @@ def totp_qr():
     qr = qrcode.QRCode(
         version=None,
         error_correction=ERROR_CORRECT_M,
-        box_size=10,   # bigger modules
+        box_size=10,  # bigger modules
         border=4,
     )
     qr.add_data(uri)
